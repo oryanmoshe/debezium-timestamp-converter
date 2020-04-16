@@ -23,7 +23,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public String strTimeFormat = DEFAULT_TIME_FORMAT;
     public Boolean debug = false;
 
-    private SchemaBuilder datetimeSchema = SchemaBuilder.string().name("com.rivery.time.DateTimeString");
+    private SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("com.rivery.time.DateTimeString");
 
     private SimpleDateFormat simpleDateFormatter;
     private SimpleDateFormat simpleTimeFormatter;
