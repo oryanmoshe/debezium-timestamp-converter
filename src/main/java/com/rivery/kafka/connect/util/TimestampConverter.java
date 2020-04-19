@@ -17,7 +17,8 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public static final String DEFAULT_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ss.SSS'Z'";
     public static final String DEFAULT_TIME_FORMAT = "HH:mm:ss.SSS";
     public static final int MILLIS_LENGTH = 13;
-    public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp");
+    public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp",
+            "datetime2");
 
     public String strDateFormat = DEFAULT_DATE_FORMAT;
     public String strTimeFormat = DEFAULT_TIME_FORMAT;
@@ -78,7 +79,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     }
 
     private Long getMillis(String timestamp, boolean isTime) {
-        if (timestamp == null || timestamp.isBlank() || timestamp.contains(":"))
+        if (timestamp == null || timestamp.isBlank() || timestamp.contains(":") || timestamp.contains("-"))
             return null;
         int excessLength = timestamp.length() - MILLIS_LENGTH;
         long longTimestamp = Long.parseLong(timestamp);
