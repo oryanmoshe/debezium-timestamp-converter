@@ -1,0 +1,75 @@
+name: Release Maven Package
+
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 13
+      - name: Run Maven tests
+        run: mvn test
+
+  build:
+    name: Build JAR
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 13
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+      - name: Upload Maven build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: build-artifact
+          path: target/TimestampConverter*.jar
+
+  deploy:
+    name: Deploy to GitHub Packages
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 13
+
+      - name: Publish to GitHub Packages Apache Maven
+        run: mvn deploy
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download Maven build artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: build-artifact
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          artifacts: build-artifact
+          draft: false
+          prerelease: false
