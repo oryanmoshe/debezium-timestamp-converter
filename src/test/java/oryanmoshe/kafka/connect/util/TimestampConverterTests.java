@@ -1,4 +1,4 @@
-package com.rivery.kafka.connect.util;
+package oryanmoshe.kafka.connect.util;
 
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.junit.jupiter.params.ParameterizedTest;

@@ -1,4 +1,4 @@
-package com.rivery.kafka.connect.util;
+package oryanmoshe.kafka.connect.util;
 
 import io.debezium.spi.converter.CustomConverter;
 import io.debezium.spi.converter.RelationalColumn;
@@ -34,7 +34,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public String strTimeFormat = DEFAULT_TIME_FORMAT;
     public Boolean debug = false;
 
-    private SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("com.rivery.time.DateTimeString");
+    private SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
 
     private SimpleDateFormat simpleDateFormatter;
     private SimpleDateFormat simpleTimeFormatter;
