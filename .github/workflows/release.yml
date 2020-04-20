@@ -82,5 +82,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./build-artifact/target/TimestampConverter-${env.VERSION}-SNAPSHOT.jar
-          # asset_name: TimestampConverter.jar
+          asset_name: TimestampConverter-${env.VERSION}-SNAPSHOT.jar
           asset_content_type: application/java-archive
