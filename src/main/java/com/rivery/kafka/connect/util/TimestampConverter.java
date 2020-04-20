@@ -3,7 +3,6 @@ package com.rivery.kafka.connect.util;
 import io.debezium.spi.converter.CustomConverter;
 import io.debezium.spi.converter.RelationalColumn;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
@@ -14,7 +13,6 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.kafka.common.protocol.types.Field.Str;
 import org.apache.kafka.connect.data.SchemaBuilder;
 
 public class TimestampConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
