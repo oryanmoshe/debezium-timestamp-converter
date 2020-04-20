@@ -1,0 +1,15 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - master
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 13
+      - name: Run Maven tests
+        run: mvn test
