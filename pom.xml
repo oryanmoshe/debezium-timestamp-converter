@@ -3,7 +3,7 @@
   <groupId>com.rivery.kafka.connect.util</groupId>
   <artifactId>TimestampConverter</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.3-SNAPSHOT</version>
+  <version>1.0.4-SNAPSHOT</version>
   <name>TimestampConverter</name>
   <url>http://maven.apache.org</url>
 

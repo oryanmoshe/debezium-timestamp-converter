@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: build-artifact
-          path: target
+          path: ./target
 
   deploy:
     name: Deploy to GitHub Packages
@@ -62,6 +62,9 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: build-artifact
+      - name: Get the version
+        id: get_version
+        run: echo ::set-env name=VERSION::${GITHUB_REF/refs\/tags\//}
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
@@ -70,6 +73,14 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          artifacts: build-artifact/target
           draft: false
           prerelease: false
+      - name: Upload Artifact to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build-artifact/target/TimestampConverter-${env.VERSION}-SNAPSHOT.jar
+          # asset_name: TimestampConverter.jar
+          asset_content_type: application/java-archive
