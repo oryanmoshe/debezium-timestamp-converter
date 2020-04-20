@@ -16,14 +16,6 @@
     <maven.surefire.version>2.22.1</maven.surefire.version>
   </properties>
 
-  <distributionManagement>
-    <repository>
-      <id>github</id>
-      <name>GitHub OWNER Apache Maven Packages</name>
-      <url>https://maven.pkg.github.com/oryanmoshe/debezium-timestamp-converter</url>
-    </repository>
-  </distributionManagement>
-
   <build>
     <plugins>
       <plugin>
