@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: build-artifact
-          path: target/TimestampConverter*.jar
+          path: target
 
   deploy:
     name: Deploy to GitHub Packages
@@ -70,6 +70,6 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          artifacts: build-artifact
+          artifacts: build-artifact/target
           draft: false
           prerelease: false
