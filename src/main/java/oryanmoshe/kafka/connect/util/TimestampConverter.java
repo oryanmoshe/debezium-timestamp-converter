@@ -71,6 +71,9 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
         if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.toLowerCase().equals(column.typeName().toLowerCase()))) {
             boolean isTime = "time".equals(column.typeName().toLowerCase());
             registration.register(datetimeSchema, rawValue -> {
+                if (rawValue == null)
+                    return rawValue;
+
                 Long millis = getMillis(rawValue.toString(), isTime);
                 if (millis == null)
                     return rawValue.toString();
@@ -89,7 +92,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     }
 
     private Long getMillis(String timestamp, boolean isTime) {
-        if (timestamp == null || timestamp.isBlank())
+        if (timestamp.isBlank())
             return null;
 
         if (timestamp.contains(":") || timestamp.contains("-")) {
