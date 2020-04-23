@@ -17,8 +17,10 @@ import org.apache.kafka.connect.data.SchemaBuilder;
 
 public class TimestampConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
 
-    public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    public static final String DEFAULT_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    public static final String DEFAULT_DATE_FORMAT = "YYYY-MM-dd";
     public static final String DEFAULT_TIME_FORMAT = "HH:mm:ss.SSS";
+
     public static final int MILLIS_LENGTH = 13;
     public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp",
             "datetime2");
@@ -30,17 +32,24 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
             Map.entry("jul", "07"), Map.entry("aug", "08"), Map.entry("sep", "09"), Map.entry("oct", "10"),
             Map.entry("nov", "11"), Map.entry("dec", "12"));
 
+    public String strDatetimeFormat = DEFAULT_DATETIME_FORMAT;
     public String strDateFormat = DEFAULT_DATE_FORMAT;
     public String strTimeFormat = DEFAULT_TIME_FORMAT;
     public Boolean debug = false;
 
     private SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
 
+    private SimpleDateFormat simpleDatetimeFormatter;
     private SimpleDateFormat simpleDateFormatter;
     private SimpleDateFormat simpleTimeFormatter;
 
     @Override
     public void configure(Properties props) {
+        String propsDatetimeFormat = props.getProperty("format.datetime");
+        strDatetimeFormat = (propsDatetimeFormat != null && !propsDatetimeFormat.isBlank()) ? propsDatetimeFormat
+                : strDatetimeFormat;
+        simpleDatetimeFormatter = new SimpleDateFormat(strDatetimeFormat);
+
         String propsDateFormat = props.getProperty("format.date");
         strDateFormat = (propsDateFormat != null && !propsDateFormat.isBlank()) ? propsDateFormat : strDateFormat;
         simpleDateFormatter = new SimpleDateFormat(strDateFormat);
@@ -53,13 +62,13 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
         if (propsDebug != null && propsDebug.equals("true"))
             debug = true;
 
-        simpleDateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        simpleDatetimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         simpleTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         if (debug)
             System.out.printf(
-                    "[TimestampConverter.configure] Finished configuring formats. strDateFormat: %s, strTimeFormat: %s%n",
-                    strDateFormat, strTimeFormat);
+                    "[TimestampConverter.configure] Finished configuring formats. strDatetimeFormat: %s, strTimeFormat: %s%n",
+                    strDatetimeFormat, strTimeFormat);
     }
 
     @Override
@@ -84,9 +93,14 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
                     System.out.printf(
                             "[TimestampConverter.converterFor] Before returning conversion. column.name: %s, column.typeName: %s, millis: %d%n",
                             column.name(), column.typeName(), millis);
-                if (isTime)
-                    return simpleTimeFormatter.format(dateObject);
-                return simpleDateFormatter.format(dateObject);
+                switch (column.typeName().toLowerCase()) {
+                    case "time":
+                        return simpleTimeFormatter.format(dateObject);
+                    case "date":
+                        return simpleDateFormatter.format(dateObject);
+                    default:
+                        return simpleDatetimeFormatter.format(dateObject);
+                }
             });
         }
     }
