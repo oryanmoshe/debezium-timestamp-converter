@@ -33,42 +33,38 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     private static final String DATETIME_REGEX = "(?<datetime>(?<date>(?:(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))|(?:(?<day2>\\d{1,2})\\/(?<month2>\\d{1,2})\\/(?<year2>\\d{4}))|(?:(?<day3>\\d{1,2})-(?<month3>\\w{3})-(?<year3>\\d{4})))?(?:\\s?T?(?<time>(?<hour>\\d{1,2}):(?<minute>\\d{1,2}):(?<second>\\d{1,2})\\.?(?<milli>\\d{0,7})?)?))";
     private static final Pattern regexPattern = Pattern.compile(DATETIME_REGEX);
 
-    public String strDatetimeFormat;
-    public String strDateFormat;
-    public String strTimeFormat;
+    public String strDatetimeFormat, strDateFormat, strTimeFormat;
     public Boolean debug;
 
     private SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
 
-    private SimpleDateFormat simpleDatetimeFormatter;
-    private SimpleDateFormat simpleDateFormatter;
-    private SimpleDateFormat simpleTimeFormatter;
+    private SimpleDateFormat simpleDatetimeFormatter, simpleDateFormatter, simpleTimeFormatter;
 
     @Override
     public void configure(Properties props) {
-        strDatetimeFormat = props.getProperty("format.datetime", DEFAULT_DATETIME_FORMAT);
-        simpleDatetimeFormatter = new SimpleDateFormat(strDatetimeFormat);
+        this.strDatetimeFormat = props.getProperty("format.datetime", DEFAULT_DATETIME_FORMAT);
+        this.simpleDatetimeFormatter = new SimpleDateFormat(this.strDatetimeFormat);
 
-        strDateFormat = props.getProperty("format.date", DEFAULT_DATE_FORMAT);
-        simpleDateFormatter = new SimpleDateFormat(strDateFormat);
+        this.strDateFormat = props.getProperty("format.date", DEFAULT_DATE_FORMAT);
+        this.simpleDateFormatter = new SimpleDateFormat(this.strDateFormat);
 
-        strTimeFormat = props.getProperty("format.time", DEFAULT_TIME_FORMAT);
-        simpleTimeFormatter = new SimpleDateFormat(strTimeFormat);
+        this.strTimeFormat = props.getProperty("format.time", DEFAULT_TIME_FORMAT);
+        this.simpleTimeFormatter = new SimpleDateFormat(this.strTimeFormat);
 
-        debug = props.getProperty("debug", "false").equals("true");
+        this.debug = props.getProperty("debug", "false").equals("true");
 
-        simpleDatetimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        simpleTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        this.simpleDatetimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        this.simpleTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        if (debug)
+        if (this.debug)
             System.out.printf(
-                    "[TimestampConverter.configure] Finished configuring formats. strDatetimeFormat: %s, strTimeFormat: %s%n",
-                    strDatetimeFormat, strTimeFormat);
+                    "[TimestampConverter.configure] Finished configuring formats. this.strDatetimeFormat: %s, this.strTimeFormat: %s%n",
+                    this.strDatetimeFormat, this.strTimeFormat);
     }
 
     @Override
     public void converterFor(RelationalColumn column, ConverterRegistration<SchemaBuilder> registration) {
-        if (debug)
+        if (this.debug)
             System.out.printf(
                     "[TimestampConverter.converterFor] Starting to register column. column.name: %s, column.typeName: %s%n",
                     column.name(), column.typeName());
@@ -84,17 +80,17 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 
                 Instant instant = Instant.ofEpochMilli(millis);
                 Date dateObject = Date.from(instant);
-                if (debug)
+                if (this.debug)
                     System.out.printf(
                             "[TimestampConverter.converterFor] Before returning conversion. column.name: %s, column.typeName: %s, millis: %d%n",
                             column.name(), column.typeName(), millis);
                 switch (column.typeName().toLowerCase()) {
                     case "time":
-                        return simpleTimeFormatter.format(dateObject);
+                        return this.simpleTimeFormatter.format(dateObject);
                     case "date":
-                        return simpleDateFormatter.format(dateObject);
+                        return this.simpleDateFormatter.format(dateObject);
                     default:
-                        return simpleDatetimeFormatter.format(dateObject);
+                        return this.simpleDatetimeFormatter.format(dateObject);
                 }
             });
         }

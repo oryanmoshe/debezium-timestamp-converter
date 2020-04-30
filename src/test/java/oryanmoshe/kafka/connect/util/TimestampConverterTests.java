@@ -34,8 +34,7 @@ public class TimestampConverterTests {
             props.put("format.date", inputFormat);
 
         final String beforeConfig = tsConverter.strDateFormat;
-        assertEquals(TimestampConverter.DEFAULT_DATE_FORMAT, beforeConfig,
-                beforeConfig + " before configuration, should equal " + TimestampConverter.DEFAULT_DATE_FORMAT);
+        assertEquals(null, beforeConfig, beforeConfig + " before configuration, should equal " + null);
         System.out.println(beforeConfig);
 
         tsConverter.configure(props);
@@ -56,8 +55,7 @@ public class TimestampConverterTests {
             props.put("format.time", inputFormat);
 
         final String beforeConfig = tsConverter.strTimeFormat;
-        assertEquals(TimestampConverter.DEFAULT_TIME_FORMAT, beforeConfig,
-                beforeConfig + " before configuration, should equal " + TimestampConverter.DEFAULT_TIME_FORMAT);
+        assertEquals(null, beforeConfig, beforeConfig + " before configuration, should equal " + null);
         System.out.println(beforeConfig);
 
         tsConverter.configure(props);
