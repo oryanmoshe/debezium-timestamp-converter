@@ -3,7 +3,7 @@
   <groupId>oryanmoshe.kafka.connect.util</groupId>
   <artifactId>TimestampConverter</artifactId>
   <packaging>jar</packaging>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.2.1-SNAPSHOT</version>
   <name>TimestampConverter</name>
   <url>http://maven.apache.org</url>
 

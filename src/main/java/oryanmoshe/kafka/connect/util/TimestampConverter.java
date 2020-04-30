@@ -17,25 +17,26 @@ import org.apache.kafka.connect.data.SchemaBuilder;
 
 public class TimestampConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
 
+    private static final Map<String, String> MONTH_MAP = Map.ofEntries(Map.entry("jan", "01"), Map.entry("feb", "02"),
+            Map.entry("mar", "03"), Map.entry("apr", "04"), Map.entry("may", "05"), Map.entry("jun", "06"),
+            Map.entry("jul", "07"), Map.entry("aug", "08"), Map.entry("sep", "09"), Map.entry("oct", "10"),
+            Map.entry("nov", "11"), Map.entry("dec", "12"));
+    public static final int MILLIS_LENGTH = 13;
+
     public static final String DEFAULT_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     public static final String DEFAULT_DATE_FORMAT = "YYYY-MM-dd";
     public static final String DEFAULT_TIME_FORMAT = "HH:mm:ss.SSS";
 
-    public static final int MILLIS_LENGTH = 13;
     public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp",
             "datetime2");
 
     private static final String DATETIME_REGEX = "(?<datetime>(?<date>(?:(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))|(?:(?<day2>\\d{1,2})\\/(?<month2>\\d{1,2})\\/(?<year2>\\d{4}))|(?:(?<day3>\\d{1,2})-(?<month3>\\w{3})-(?<year3>\\d{4})))?(?:\\s?T?(?<time>(?<hour>\\d{1,2}):(?<minute>\\d{1,2}):(?<second>\\d{1,2})\\.?(?<milli>\\d{0,7})?)?))";
     private static final Pattern regexPattern = Pattern.compile(DATETIME_REGEX);
-    private static final Map<String, String> MONTH_MAP = Map.ofEntries(Map.entry("jan", "01"), Map.entry("feb", "02"),
-            Map.entry("mar", "03"), Map.entry("apr", "04"), Map.entry("may", "05"), Map.entry("jun", "06"),
-            Map.entry("jul", "07"), Map.entry("aug", "08"), Map.entry("sep", "09"), Map.entry("oct", "10"),
-            Map.entry("nov", "11"), Map.entry("dec", "12"));
 
-    public String strDatetimeFormat = DEFAULT_DATETIME_FORMAT;
-    public String strDateFormat = DEFAULT_DATE_FORMAT;
-    public String strTimeFormat = DEFAULT_TIME_FORMAT;
-    public Boolean debug = false;
+    public String strDatetimeFormat;
+    public String strDateFormat;
+    public String strTimeFormat;
+    public Boolean debug;
 
     private SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
 
@@ -45,22 +46,16 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 
     @Override
     public void configure(Properties props) {
-        String propsDatetimeFormat = props.getProperty("format.datetime");
-        strDatetimeFormat = (propsDatetimeFormat != null && !propsDatetimeFormat.isBlank()) ? propsDatetimeFormat
-                : strDatetimeFormat;
+        strDatetimeFormat = props.getProperty("format.datetime", DEFAULT_DATETIME_FORMAT);
         simpleDatetimeFormatter = new SimpleDateFormat(strDatetimeFormat);
 
-        String propsDateFormat = props.getProperty("format.date");
-        strDateFormat = (propsDateFormat != null && !propsDateFormat.isBlank()) ? propsDateFormat : strDateFormat;
+        strDateFormat = props.getProperty("format.date", DEFAULT_DATE_FORMAT);
         simpleDateFormatter = new SimpleDateFormat(strDateFormat);
 
-        String propsTimeFormat = props.getProperty("format.time");
-        strTimeFormat = (propsTimeFormat != null && !propsTimeFormat.isBlank()) ? propsTimeFormat : strTimeFormat;
+        strTimeFormat = props.getProperty("format.time", DEFAULT_TIME_FORMAT);
         simpleTimeFormatter = new SimpleDateFormat(strTimeFormat);
 
-        String propsDebug = props.getProperty("debug");
-        if (propsDebug != null && propsDebug.equals("true"))
-            debug = true;
+        debug = props.getProperty("debug", "false").equals("true");
 
         simpleDatetimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         simpleTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -77,8 +72,8 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
             System.out.printf(
                     "[TimestampConverter.converterFor] Starting to register column. column.name: %s, column.typeName: %s%n",
                     column.name(), column.typeName());
-        if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.toLowerCase().equals(column.typeName().toLowerCase()))) {
-            boolean isTime = "time".equals(column.typeName().toLowerCase());
+        if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.equalsIgnoreCase(column.typeName()))) {
+            boolean isTime = "time".equalsIgnoreCase(column.typeName());
             registration.register(datetimeSchema, rawValue -> {
                 if (rawValue == null)
                     return rawValue;
