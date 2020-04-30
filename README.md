@@ -9,17 +9,18 @@ You can either download the `.jar` file from the [releases](https://github.com/o
 **You have to add this converter to each of your connectors, not just in the main folder (`/kafka/connect`)!**
 
 ## Configuration
-To configure this converter you need to add the following lines to your connector configuration:
+### Basic Configuration
+To configure this converter all you need to do is add the following lines to your connector configuration:
 ```json
 "converters": "timestampConverter",
 "timestampConverter.type": "oryanmoshe.kafka.connect.util.TimestampConverter"
 ```
 
-That's it!  
+### Additional Configuration
 There are a few configuration settings you can add, here are their default values:
 ```json
 "timestampConverter.format.time": "HH:mm:ss.SSS",
 "timestampConverter.format.date": "YYYY-MM-dd",
 "timestampConverter.format.datetime": "YYYY-MM-dd'T'HH:mm:ss.SSS'Z'",
-"timestampConverter.debug": "false",
+"timestampConverter.debug": "false"
 ```
