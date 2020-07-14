@@ -8,9 +8,11 @@ import io.debezium.spi.converter.RelationalColumn;
 import io.debezium.spi.converter.CustomConverter.Converter;
 import io.debezium.spi.converter.CustomConverter.ConverterRegistration;
 
+import java.util.List;
 import java.util.OptionalInt;
 import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TimestampConverterTests {
     private class MockRegistration<S> implements ConverterRegistration<S> {
@@ -22,6 +24,24 @@ public class TimestampConverterTests {
             _converter = converter;
             _schema = fieldSchema;
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "date timestamp datetime2", "datetime time"})
+    void configureSupportedTypeTest(final String supportedTypes) {
+        final TimestampConverter tsConverter = new TimestampConverter();
+
+        Properties props = new Properties();
+        if (supportedTypes != null)
+            props.put("type.support", supportedTypes);
+
+        final List<String> beforeConfig = tsConverter.supportedDataTypes;
+        assertEquals(null, beforeConfig, beforeConfig + " before configuration, should equal " + null);
+
+        tsConverter.configure(props);
+
+        final List<String> actualResult = tsConverter.supportedDataTypes;
+        actualResult.stream().forEach(s -> assertTrue(supportedTypes.contains(s)));
     }
 
     @ParameterizedTest

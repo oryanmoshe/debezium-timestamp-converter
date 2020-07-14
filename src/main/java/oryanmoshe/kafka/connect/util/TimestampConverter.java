@@ -27,12 +27,12 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public static final String DEFAULT_DATE_FORMAT = "YYYY-MM-dd";
     public static final String DEFAULT_TIME_FORMAT = "HH:mm:ss.SSS";
 
-    public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp",
-            "datetime2");
+    public static final String DEFAULT_SUPPORTED_DATA_TYPES = "date time datetime datetime2 timestamp";
 
     private static final String DATETIME_REGEX = "(?<datetime>(?<date>(?:(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))|(?:(?<day2>\\d{1,2})\\/(?<month2>\\d{1,2})\\/(?<year2>\\d{4}))|(?:(?<day3>\\d{1,2})-(?<month3>\\w{3})-(?<year3>\\d{4})))?(?:\\s?T?(?<time>(?<hour>\\d{1,2}):(?<minute>\\d{1,2}):(?<second>\\d{1,2})\\.?(?<milli>\\d{0,7})?)?))";
     private static final Pattern regexPattern = Pattern.compile(DATETIME_REGEX);
 
+    public List<String> supportedDataTypes;
     public String strDatetimeFormat, strDateFormat, strTimeFormat;
     public Boolean debug;
 
@@ -51,6 +51,9 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
         this.strTimeFormat = props.getProperty("format.time", DEFAULT_TIME_FORMAT);
         this.simpleTimeFormatter = new SimpleDateFormat(this.strTimeFormat);
 
+        String supportedDataTypesStr = props.getProperty("type.support", DEFAULT_SUPPORTED_DATA_TYPES);
+        this.supportedDataTypes = List.of(supportedDataTypesStr.split(" "));
+
         this.debug = props.getProperty("debug", "false").equals("true");
 
         this.simpleDatetimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -68,7 +71,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
             System.out.printf(
                     "[TimestampConverter.converterFor] Starting to register column. column.name: %s, column.typeName: %s%n",
                     column.name(), column.typeName());
-        if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.equalsIgnoreCase(column.typeName()))) {
+        if (supportedDataTypes.stream().anyMatch(s -> s.equalsIgnoreCase(column.typeName()))) {
             boolean isTime = "time".equalsIgnoreCase(column.typeName());
             registration.register(datetimeSchema, rawValue -> {
                 if (rawValue == null)
