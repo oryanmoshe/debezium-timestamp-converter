@@ -1,33 +1,42 @@
 package oryanmoshe.kafka.connect.util;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import io.debezium.spi.converter.CustomConverter;
 import io.debezium.spi.converter.RelationalColumn;
+import org.apache.kafka.connect.data.SchemaBuilder;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.kafka.connect.data.SchemaBuilder;
-
 public class TimestampConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
 
-    private static final Map<String, String> MONTH_MAP = Map.ofEntries(Map.entry("jan", "01"), Map.entry("feb", "02"),
-            Map.entry("mar", "03"), Map.entry("apr", "04"), Map.entry("may", "05"), Map.entry("jun", "06"),
-            Map.entry("jul", "07"), Map.entry("aug", "08"), Map.entry("sep", "09"), Map.entry("oct", "10"),
-            Map.entry("nov", "11"), Map.entry("dec", "12"));
+    private static final ImmutableMap<String, String> MONTH_MAP = ImmutableMap.<String, String>builder()
+        .put("jan", "01")
+        .put("feb", "02")
+        .put("mar", "03")
+        .put("apr", "04")
+        .put("may", "05")
+        .put("jun", "06")
+        .put("jul", "07")
+        .put("aug", "08")
+        .put("sep", "09")
+        .put("oct", "10")
+        .put("nov", "11")
+        .put("dec", "12")
+        .build();
     public static final int MILLIS_LENGTH = 13;
 
     public static final String DEFAULT_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     public static final String DEFAULT_DATE_FORMAT = "YYYY-MM-dd";
     public static final String DEFAULT_TIME_FORMAT = "HH:mm:ss.SSS";
 
-    public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp",
+    public static final ImmutableList<String> SUPPORTED_DATA_TYPES = ImmutableList.of("date", "time", "datetime", "timestamp",
             "datetime2");
 
     private static final String DATETIME_REGEX = "(?<datetime>(?<date>(?:(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))|(?:(?<day2>\\d{1,2})\\/(?<month2>\\d{1,2})\\/(?<year2>\\d{4}))|(?:(?<day3>\\d{1,2})-(?<month3>\\w{3})-(?<year3>\\d{4})))?(?:\\s?T?(?<time>(?<hour>\\d{1,2}):(?<minute>\\d{1,2}):(?<second>\\d{1,2})\\.?(?<milli>\\d{0,7})?)?))";
@@ -97,7 +106,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     }
 
     private Long getMillis(String timestamp, boolean isTime) {
-        if (timestamp.isBlank())
+        if (timestamp.trim().isEmpty())
             return null;
 
         if (timestamp.contains(":") || timestamp.contains("-")) {
