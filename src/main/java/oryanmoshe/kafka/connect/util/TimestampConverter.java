@@ -28,7 +28,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public static final String DEFAULT_TIME_FORMAT = "HH:mm:ss.SSS";
 
     public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp",
-            "datetime2");
+								    "timestamptz", "datetime2");
 
     private static final String DATETIME_REGEX = "(?<datetime>(?<date>(?:(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))|(?:(?<day2>\\d{1,2})\\/(?<month2>\\d{1,2})\\/(?<year2>\\d{4}))|(?:(?<day3>\\d{1,2})-(?<month3>\\w{3})-(?<year3>\\d{4})))?(?:\\s?T?(?<time>(?<hour>\\d{1,2}):(?<minute>\\d{1,2}):(?<second>\\d{1,2})\\.?(?<milli>\\d{0,7})?)?))";
     private static final Pattern regexPattern = Pattern.compile(DATETIME_REGEX);
