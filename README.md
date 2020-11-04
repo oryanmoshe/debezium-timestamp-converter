@@ -22,5 +22,6 @@ There are a few configuration settings you can add, here are their default value
 "timestampConverter.format.time": "HH:mm:ss.SSS",
 "timestampConverter.format.date": "YYYY-MM-dd",
 "timestampConverter.format.datetime": "YYYY-MM-dd'T'HH:mm:ss.SSS'Z'",
-"timestampConverter.debug": "false"
+"timestampConverter.debug": "false",
+"timestampConverter.format.timezone": "UTC"
 ```

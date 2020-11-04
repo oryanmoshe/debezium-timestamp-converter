@@ -10,6 +10,7 @@ import io.debezium.spi.converter.CustomConverter.ConverterRegistration;
 
 import java.util.OptionalInt;
 import java.util.Properties;
+import java.util.TimeZone;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TimestampConverterTests {
@@ -67,11 +68,33 @@ public class TimestampConverterTests {
     }
 
     @ParameterizedTest
-    @CsvSource({ "date, YYYY-MM-dd, 18368, 2020-04-16", "date,, 18368, 2020-04-16", "time, mm:ss.SSS, 2230, 00:02.230",
-            "time,, 2230, 00:00:02.230", "datetime, YYYY-MM-dd, 1587042000279, 2020-04-16",
-            "datetime,, 1587042000279, 2020-04-16T13:00:00.279Z", "timestamp, YYYY-MM-dd, 1587042000279, 2020-04-16",
-            "datetime2,, 1587042000279, 2020-04-16T13:00:00.279Z", "datetime2, YYYY-MM-dd, 1587042000279, 2020-04-16",
-            "timestamp,, 1587042000279, 2020-04-16T13:00:00.279Z", "date, YYYY-MM-dd, 2019-04-19, 2019-04-19",
+    @CsvSource({ "Europe/Berlin, Europe/Berlin", "," + TimestampConverter.DEFAULT_TIME_ZONE })
+    void configureDateTimeZoneTest(final String inputFormat, final String expectedFormat) {
+        final TimestampConverter tsConverter = new TimestampConverter();
+
+        Properties props = new Properties();
+        if (inputFormat != null)
+            props.put("format.timezone", inputFormat);
+
+	final TimeZone beforeConfig = tsConverter.tz;
+        assertEquals(null, beforeConfig, beforeConfig + " before configuration, should equal " + null);
+        System.out.println("null");
+
+        tsConverter.configure(props);
+
+	final TimeZone actualResult = tsConverter.tz;
+	
+        assertEquals(expectedFormat, actualResult.getID(),
+		     actualResult.getID() + " after configuration, should equal " + expectedFormat);
+        System.out.println(actualResult.getID());
+    }
+    
+    @ParameterizedTest
+    @CsvSource({ "date, yyyy-MM-dd, 18368, 2020-04-16", "date,, 18368, 2020-04-16", "time, mm:ss.SSS, 2230, 00:02.230",
+            "time,, 2230, 00:00:02.230", "datetime, yyyy-MM-dd, 1587042000279, 2020-04-16",
+            "datetime,, 1587042000279, 2020-04-16T13:00:00.279Z", "timestamp, yyyy-MM-dd, 1587042000279, 2020-04-16",
+            "datetime2,, 1587042000279, 2020-04-16T13:00:00.279Z", "datetime2, yyyy-MM-dd, 1587042000279, 2020-04-16",
+            "timestamp,, 1587042000279, 2020-04-16T13:00:00.279Z", "date, yyyy-MM-dd, 2019-04-19, 2019-04-19",
             "datetime,, 2019-04-19 15:13:20.345123, 2019-04-19T15:13:20.345Z", "time,, 15:13:20, 15:13:20.000",
             "time,HH:mm:ss, 15:13:20, 15:13:20", "timestamp,, 2019-04-19 15:13:20, 2019-04-19T15:13:20.000Z",
             "datetime,, 19-Apr-2019 15:13:20.345123, 2019-04-19T15:13:20.345Z",

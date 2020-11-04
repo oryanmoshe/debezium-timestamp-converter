@@ -13,6 +13,9 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.kafka.connect.data.SchemaBuilder;
 
 public class TimestampConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
@@ -24,8 +27,9 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public static final int MILLIS_LENGTH = 13;
 
     public static final String DEFAULT_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    public static final String DEFAULT_DATE_FORMAT = "YYYY-MM-dd";
+    public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
     public static final String DEFAULT_TIME_FORMAT = "HH:mm:ss.SSS";
+    public static final String DEFAULT_TIME_ZONE   = "UTC";
 
     public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp",
 								    "timestamptz", "datetime2");
@@ -34,15 +38,31 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     private static final Pattern regexPattern = Pattern.compile(DATETIME_REGEX);
 
     public String strDatetimeFormat, strDateFormat, strTimeFormat;
+    public TimeZone tz;
     public Boolean debug;
 
     private SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
 
     private SimpleDateFormat simpleDatetimeFormatter, simpleDateFormatter, simpleTimeFormatter;
 
+    private Logger logger = LoggerFactory.getLogger(TimestampConverter.class);
+
+    private void logAvailableTimeZones() {
+
+	String tzids[] = TimeZone.getAvailableIDs();
+
+	for (int i = 0; i < tzids.length; i++) {
+	    logger.info("[TimestampConverter.logAvailableTimeZones] timezone id {}={}", i, tzids[i]);
+	}
+
+    }
+
     @Override
     public void configure(Properties props) {
-        this.strDatetimeFormat = props.getProperty("format.datetime", DEFAULT_DATETIME_FORMAT);
+
+        this.debug = props.getProperty("debug", "false").equals("true");
+
+	this.strDatetimeFormat = props.getProperty("format.datetime", DEFAULT_DATETIME_FORMAT);
         this.simpleDatetimeFormatter = new SimpleDateFormat(this.strDatetimeFormat);
 
         this.strDateFormat = props.getProperty("format.date", DEFAULT_DATE_FORMAT);
@@ -51,52 +71,76 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
         this.strTimeFormat = props.getProperty("format.time", DEFAULT_TIME_FORMAT);
         this.simpleTimeFormatter = new SimpleDateFormat(this.strTimeFormat);
 
-        this.debug = props.getProperty("debug", "false").equals("true");
+	if (this.debug)
+	    logAvailableTimeZones();
 
-        this.simpleDatetimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        this.simpleTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+	this.tz = TimeZone.getTimeZone(props.getProperty("format.timezone", DEFAULT_TIME_ZONE));
+
+	if (this.tz == null) {
+	    logger.warn("[TimestampConverter] no timezone specified, defaulting to {}", DEFAULT_TIME_ZONE);
+	    this.tz = TimeZone.getTimeZone(DEFAULT_TIME_ZONE);
+	}
+
+        this.simpleDatetimeFormatter.setTimeZone(this.tz);
+        this.simpleTimeFormatter.setTimeZone(this.tz);
 
         if (this.debug)
-            System.out.printf(
-                    "[TimestampConverter.configure] Finished configuring formats. this.strDatetimeFormat: %s, this.strTimeFormat: %s%n",
-                    this.strDatetimeFormat, this.strTimeFormat);
+	    logger.info("[TimestampConverter.configure] Finished configuring formats. strDatetimeFormat: {}, "
+			+ "strTimeFormat: {} strDateFormat: {}, timezone: {}",
+			this.strDatetimeFormat, this.strTimeFormat, this.strDateFormat, this.tz.getID());
+
     }
 
     @Override
     public void converterFor(RelationalColumn column, ConverterRegistration<SchemaBuilder> registration) {
+
         if (this.debug)
-            System.out.printf(
-                    "[TimestampConverter.converterFor] Starting to register column. column.name: %s, column.typeName: %s%n",
-                    column.name(), column.typeName());
+	    logger.info("[TimestampConverter.converterFor] Starting to register column. column.name: {}, column.typeName: {}",
+			column.name(), column.typeName());
         if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.equalsIgnoreCase(column.typeName()))) {
             boolean isTime = "time".equalsIgnoreCase(column.typeName());
             registration.register(datetimeSchema, rawValue -> {
                 if (rawValue == null)
                     return rawValue;
 
-                Long millis = getMillis(rawValue.toString(), isTime);
+		if (this.debug)
+		    logger.info("[TimestampConverter.converterFor] Raw Value: {}",
+				rawValue);
+
+		Long millis = getMillis(rawValue.toString(), isTime);
                 if (millis == null)
                     return rawValue.toString();
 
                 Instant instant = Instant.ofEpochMilli(millis);
                 Date dateObject = Date.from(instant);
+		String convertedValue = "";
+		
                 if (this.debug)
-                    System.out.printf(
-                            "[TimestampConverter.converterFor] Before returning conversion. column.name: %s, column.typeName: %s, millis: %d%n",
-                            column.name(), column.typeName(), millis);
+		    logger.info("[TimestampConverter.converterFor] Before returning conversion. column.name: {}, column.typeName: {}, millis: {}",
+				column.name(), column.typeName(), millis);
                 switch (column.typeName().toLowerCase()) {
                     case "time":
-                        return this.simpleTimeFormatter.format(dateObject);
+                        convertedValue = this.simpleTimeFormatter.format(dateObject);
+			break;
                     case "date":
-                        return this.simpleDateFormatter.format(dateObject);
+                        convertedValue = this.simpleDateFormatter.format(dateObject);
+			break;
                     default:
-                        return this.simpleDatetimeFormatter.format(dateObject);
+                        convertedValue = this.simpleDatetimeFormatter.format(dateObject);
+			break;
                 }
+
+		if (this.debug)
+		    logger.info("[TimestampConverter.converterFor] After conversion. column.name: {}, column.typeName: {}, convertedValue: {}",
+				column.name(), column.typeName(), convertedValue);
+
+		return convertedValue;
             });
         }
     }
 
     private Long getMillis(String timestamp, boolean isTime) {
+
         if (timestamp.isBlank())
             return null;
 
@@ -115,9 +159,11 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 
         long millis = longTimestamp / (long) Math.pow(10, excessLength);
         return millis;
+
     }
 
     private Long milliFromDateString(String timestamp) {
+
         Matcher matches = regexPattern.matcher(timestamp);
 
         if (matches.find()) {
@@ -150,10 +196,15 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
                 dateStr = String.format("%s-%s-%sT%sZ", "2020", "01", "01", dateStr);
             }
 
+	    if (this.debug)
+		logger.info("[TimestampConverter.milliFromDateString] decoded dateStr = {}", dateStr);
+	    
             Date dateObj = Date.from(Instant.parse(dateStr));
             return dateObj.getTime();
+
         }
 
         return null;
     }
+
 }
