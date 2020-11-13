@@ -1,0 +1,8 @@
+image: "gitlab-mg-registry.credativ.de:443/de/docker-base-images:debian-buster"
+
+before_script:
+  - apt-get install -y openjdk-11-jdk maven
+
+debezium-timestamp-converter:
+  script:
+    - mvn -e package
