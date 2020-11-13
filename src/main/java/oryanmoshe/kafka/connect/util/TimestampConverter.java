@@ -566,8 +566,20 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
                 this.useDefaultDateInput = true;
             }
 
+            if (debug) {
+                logger.info("[TimestampConverter.configure] convert.postgresql.format.datetime: \"{}\"",
+                            this.strDefaultDatetimeInputFormat);
+                logger.info("[TimestampConverter.configure] convert.postgresql.format.time: \"{}\"",
+                            this.strDefaultTimeInputFormat);
+                logger.info("[TimestampConverter.configure] convert.postgresql.format.date: \"{}\"",
+                            this.strDefaultDateInputFormat);
+            }
+
             this.convert_timetz
                 = (props.getProperty("convert.postgresql.timetz.timezone", "false").equals("true")) ? true : false;
+
+            if (debug && convert_timetz)
+                logger.info("[TimestampConverter.configure] timezone conversion of \"timetz\" values enforced");
 
 	    this.convertMode = InternalConverter.CONVERT_MODE_POSTGRESQL;
 
