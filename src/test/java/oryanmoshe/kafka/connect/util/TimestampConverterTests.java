@@ -222,6 +222,83 @@ public class TimestampConverterTests {
     }
 
     @ParameterizedTest
+    @CsvSource({"dd-MM-yyyy'T'HH:mm:ss X, 01-01-2020T14:45:15 +01, 2020-01-01T03:45:15.000, US/Samoa, timestamptz",
+                "HH:mm:ss X, 14:45:15 +01, 03:45:15.000, US/Samoa, timetz"})
+    void inputTestPGTZ(final String inputFormat, final String input, final String expected,
+                       final String tzstring, final String columnType) {
+
+        final TimestampConverter tsConverter = new TimestampConverter();
+        Properties props = new Properties();
+
+        props.put("convert.mode", "postgresql");
+        props.put("format.timezone", tzstring);
+
+        if (columnType.equals("timestamptz")) {
+            props.put("convert.postgresql.format.datetime", inputFormat);
+        } else if (columnType.equals("timetz")) {
+            props.put("convert.postgresql.format.time", inputFormat);
+            props.put("convert.postgresql.timetz.timezone", "true");
+        } else {
+            assertEquals("supported types (timestamptz, timetz)", columnType,
+                         "test supports type timestamptz, timetz, got " + columnType);
+        }
+
+        props.put("format.datetime", "yyyy-MM-dd'T'HH:mm:ss.SSS");
+        props.put("format.time", "HH:mm:ss.SSS");
+        tsConverter.configure(props);
+
+        RelationalColumn mockColumn = getMockColumn(columnType);
+        MockRegistration<SchemaBuilder> mockRegistration = new MockRegistration<SchemaBuilder>();
+
+        tsConverter.converterFor(mockColumn, mockRegistration);
+
+        System.out.println(mockRegistration._schema.name());
+
+        String actualResult = mockRegistration._converter.convert(input).toString();
+        System.out.println(actualResult);
+        assertEquals(expected, actualResult,
+                     String.format(
+                                   "columnType: timestamptz, format: %s, input: %s, actualDatetimeInputFormat: %s, actualTimeInputFormat: %s, props: %s",
+                                   inputFormat, input, tsConverter.strDefaultDatetimeInputFormat,
+                                   tsConverter.strDefaultTimeInputFormat, props));
+
+    }
+
+    @ParameterizedTest
+    @CsvSource({"dd.MM.yyyy 'T' HH:mm:ss ZZZZZ, 2020-06-01T18:15:45.12345Z, 02.06.2020 T 02:15:45 +08:00, Singapore, format.datetimetz",
+                "MM/dd/yyyy HH:mm:ss.S, 2020-03-29T01:15:00Z, 03/29/2020 03:15:00.0, CET, format.datetimetz",
+                "MM/dd/yyyy HH:mm:ss.S, 2020-03-29T01:15:00Z, 03/29/2020 03:15:00.0, CET, format.datetime",
+                "YY-MM-dd HH:mm X, 2020-01-01T14:45:59.123456789Z, 20-01-01 03:45 -11, US/Samoa, format.datetimetz",
+                "YY-MM-dd HH:mm X, 2020-01-01T14:45:59.123456789Z, 20-01-01 15:45 +01, CET, format.datetimetz"})
+    void convertTestPGTZFormatStrings(final String format, final String input,
+                                      final String expected, final String tzstring, final String format_setting) {
+
+        final TimestampConverter tsConverter = new TimestampConverter();
+        Properties props = new Properties();
+
+        props.put("convert.mode", "postgresql");
+        props.put(format_setting, format);
+        props.put("format.timezone", tzstring);
+
+        tsConverter.configure(props);
+
+        RelationalColumn mockColumn = getMockColumn("timestamptz");
+        MockRegistration<SchemaBuilder> mockRegistration = new MockRegistration<SchemaBuilder>();
+
+        tsConverter.converterFor(mockColumn, mockRegistration);
+
+        System.out.println(mockRegistration._schema.name());
+
+        String actualResult = mockRegistration._converter.convert(input).toString();
+        System.out.println(actualResult);
+        assertEquals(expected, actualResult,
+                     String.format(
+                                   "columnType: timestamptz, format: %s, input: %s, actualDatetimeFormat: %s, actualDatetimeTzFormat: %s, props: %s",
+                                   format, input, tsConverter.strDatetimeFormat, tsConverter.strDatetimeTzFormat, props));
+
+    }
+
+    @ParameterizedTest
     @CsvSource({ "date, yyyy-MM-dd, 2020-04-16, 2020-04-16", "date,, 2020-04-16, 2020-04-16", "time, mm:ss.SSS, 00:00:02.230, 00:02.230",
                 "time,, 00:00:02.230, 00:00:02.230", "timestamp, yyyy-MM-dd, 2020-04-16T00:02, 2020-04-16",
                 "timetz,,00:00:02.230Z, 00:00:02.230",

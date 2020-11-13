@@ -106,7 +106,11 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 
 	private final String DATETIME_REGEX = "(?<datetime>(?<date>(?:(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))|(?:(?<day2>\\d{1,2})\\/(?<month2>\\d{1,2})\\/(?<year2>\\d{4}))|(?:(?<day3>\\d{1,2})-(?<month3>\\w{3})-(?<year3>\\d{4})))?(?:\\s?T?(?<time>(?<hour>\\d{1,2}):(?<minute>\\d{1,2}):(?<second>\\d{1,2})\\.?(?<milli>\\d{0,7})?)?))";
 	private final Pattern regexPattern = Pattern.compile(DATETIME_REGEX);
-	private SimpleDateFormat simpleDatetimeFormatter, simpleDateFormatter, simpleTimeFormatter;
+	private SimpleDateFormat simpleDatetimeTzFormatter,
+            simpleDatetimeFormatter,
+            simpleDateFormatter,
+            simpleTimeFormatter;
+
 	public TimeZone tz;
 
 	public String getTimeZoneID() {
@@ -153,6 +157,8 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 	    case "date":
 		convertedValue = this.simpleDateFormatter.format(dateObject);
 		break;
+            case "timestamptz":
+                convertedValue = this.simpleDatetimeTzFormatter.format(dateObject);
 	    default:
 		convertedValue = this.simpleDatetimeFormatter.format(dateObject);
 		break;
@@ -169,6 +175,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 	public GenericTimestampConverter() {
 
 	    super();
+            simpleDatetimeTzFormatter = new SimpleDateFormat(strDatetimeTzFormat);
 	    simpleDatetimeFormatter = new SimpleDateFormat(strDatetimeFormat);
 	    simpleDateFormatter = new SimpleDateFormat(strDateFormat);
 	    simpleTimeFormatter = new SimpleDateFormat(strTimeFormat);
@@ -303,7 +310,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 
 	    try {
 
-		LocalDateTime ldt = LocalDateTime.parse(val, pgTimestampInputFormatter);
+		LocalDateTime ldt = LocalDateTime.parse(val, pgTimestampTzInputFormatter);
 		ZoneId utc = ZoneId.of("UTC");
 		ZoneId zid = ZoneId.of(tzstring);
 
@@ -312,7 +319,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 
 		ZonedDateTime zt = ldt.atZone(utc);
 		ZonedDateTime zt_tz = zt.withZoneSameInstant(zid);
-		DateTimeFormatter result_formatter = DateTimeFormatter.ofPattern(strDatetimeFormat);
+		DateTimeFormatter result_formatter = DateTimeFormatter.ofPattern(strDatetimeTzFormat);
 		result = result_formatter.format(zt_tz);
 
 	    } catch (DateTimeParseException e) {
@@ -399,15 +406,16 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     }
 
     /* Input DateTimeFormatter objects for PostgreSQL Converter. */
-    private DateTimeFormatter pgTimestampInputFormatter = null;
-    private DateTimeFormatter pgTimeInputFormatter      = null;
-    private DateTimeFormatter pgDateInputFormatter      = null;
+    private DateTimeFormatter pgTimestampTzInputFormatter = null;
+    private DateTimeFormatter pgTimestampInputFormatter   = null;
+    private DateTimeFormatter pgTimeInputFormatter        = null;
+    private DateTimeFormatter pgDateInputFormatter        = null;
 
     private boolean useDefaultDatetimeInput = false;
     private boolean useDefaultTimeInput = false;
     private boolean useDefaultDateInput = false;
 
-    public String strDatetimeFormat, strDateFormat, strTimeFormat,
+    public String strDatetimeFormat, strDatetimeTzFormat, strDateFormat, strTimeFormat,
 	strDefaultDatetimeInputFormat, strDefaultTimeInputFormat, strDefaultDateInputFormat;
 
     /*
@@ -512,6 +520,16 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
         debug = props.getProperty("debug", "false").equals("true");
 
 	this.strDatetimeFormat = props.getProperty("format.datetime", DEFAULT_DATETIME_FORMAT);
+        this.strDatetimeTzFormat = props.getProperty("format.datetimetz", DEFAULT_DATETIME_FORMAT);
+
+        /*
+         * Iff the format.datetimetz format string is overridden, make sure we
+         * use the user supplied setting. Otherwise set format.datetimetz = format.datetime
+         * explicitly.
+         */
+        if (this.strDatetimeTzFormat == DEFAULT_DATETIME_FORMAT)
+            this.strDatetimeTzFormat = this.strDatetimeFormat;
+
         this.strDateFormat = props.getProperty("format.date", DEFAULT_DATE_FORMAT);
         this.strTimeFormat = props.getProperty("format.time", DEFAULT_TIME_FORMAT);
 
@@ -520,8 +538,9 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 
         if (debug)
 	    logger.info("[TimestampConverter.configure] Finished configuring formats. strDatetimeFormat: {}, "
-			+ "strTimeFormat: {} strDateFormat: {}, timezone: {}",
-			this.strDatetimeFormat, this.strTimeFormat, this.strDateFormat, this.tzstring);
+                        + "strDatetimeTzFormat: {} strTimeFormat: {} strDateFormat: {}, timezone: {}",
+			this.strDatetimeFormat, this.strDatetimeTzFormat,
+                        this.strTimeFormat, this.strDateFormat, this.tzstring);
 
 	/* Set convert mode, if specified */
 	if (props.getProperty("convert.mode", "generic").equals("postgresql")) {
@@ -552,6 +571,9 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
 
 	    this.convertMode = InternalConverter.CONVERT_MODE_POSTGRESQL;
 
+            this.pgTimestampTzInputFormatter = inputFormatter(this.strDefaultDatetimeInputFormat,
+                                                              ConvertFormatterType.TIMESTAMP_INPUT_FORMATTER,
+                                                              this.useDefaultDatetimeInput);
             this.pgTimestampInputFormatter = inputFormatter(this.strDefaultDatetimeInputFormat,
                                                             ConvertFormatterType.TIMESTAMP_INPUT_FORMATTER,
                                                             this.useDefaultDatetimeInput);

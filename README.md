@@ -26,13 +26,20 @@ There are a few configuration settings you can add, here are their default value
 "timestampConverter.format.time": "HH:mm:ss.SSS",
 "timestampConverter.format.date": "YYYY-MM-dd",
 "timestampConverter.format.datetime": "YYYY-MM-dd'T'HH:mm:ss.SSS'Z'",
+"timestampConverter.format.datetimetz": "YYYY-MM-dd'T'HH:mm:ss.SSS'Z'",
 "timestampConverter.debug": "false",
 "timestampConverter.format.timezone": "UTC",
 "timestampConverter.convert.mode": "generic"
 ```
 
-The ```timestampConverter.format.timezone``` parameter can be used to convert the representation of
-timestamp with time zones.
+The parameter ``timestampConverter.format.timezone`` can be used to convert the representation of
+timestamp with time zones. In this case, care must be taken if you want to format the converted
+``timestamptz`` value to preserve the offset specification. ``timestampConverter.format.datetime``
+is used for ``timestamp`` datatype conversion as well, and since this type doesn't support
+offset in its pattern representation this would fail if someone converts both datatypes within
+the same configuration. To solve this, specify the ```timestampConverter.format.datetimetz``` with the
+pattern for ```timestamptz``` values additionally and leave the ```timestampConverter.format.datetime```
+for ```timestamp``` alone.
 
 The Timestamp Converter plugin supports two conversion modes: a ```generic``` conversion mode which tries to support
 a wide range of temporal input formats, and a ```postgresql``` conversion mode. The latter is dedicated to PostgreSQL
@@ -63,7 +70,7 @@ https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.htm
 There is an additional parameter which controls the conversion in ```postgresql``` mode
 for its ```timetz``` datatype:
 
-```
+```json
 "timestampConverter.convert.postgresql.timetz.timezone": "false"
 ```
 
