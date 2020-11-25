@@ -118,7 +118,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     }
 
     private Long getMillis(final String timestamp, final boolean isTime) {
-        if (timestamp != null && timestamp.length() <= 0) {
+        if (timestamp != null && !timestamp.isEmpty()) {
             return null;
         }
 
