@@ -24,7 +24,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public static final int MILLIS_LENGTH = 13;
 
     public static final String DEFAULT_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    public static final String DEFAULT_DATE_FORMAT = "YYYY-MM-dd";
+    public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
     public static final String DEFAULT_TIME_FORMAT = "HH:mm:ss.SSS";
 
     public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp",
@@ -84,14 +84,22 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
                     System.out.printf(
                             "[TimestampConverter.converterFor] Before returning conversion. column.name: %s, column.typeName: %s, millis: %d%n",
                             column.name(), column.typeName(), millis);
+                String result = "";
                 switch (column.typeName().toLowerCase()) {
                     case "time":
-                        return this.simpleTimeFormatter.format(dateObject);
+                        result = this.simpleTimeFormatter.format(dateObject);
+                        break;
                     case "date":
-                        return this.simpleDateFormatter.format(dateObject);
+                        result = this.simpleDateFormatter.format(dateObject);
+                        break;
                     default:
-                        return this.simpleDatetimeFormatter.format(dateObject);
+                        result = this.simpleDatetimeFormatter.format(dateObject);
                 }
+                if (this.debug)
+                    System.out.printf(
+                            "[TimestampConverter.converterFor] After conversion. column.name: %s, column.typeName: %s, date: %s %s %n",
+                            column.name(), column.typeName(), result,dateObject.toString());
+                return result;
             });
         }
     }

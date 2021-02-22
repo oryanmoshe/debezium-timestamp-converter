@@ -20,7 +20,7 @@
     <repository>
       <id>github</id>
       <name>GitHub oryanmoshe Apache Maven Packages</name>
-      <url>https://maven.pkg.github.com/oryanmoshe/debezium-timestamp-converter</url>
+      <url>https://maven.pkg.github.com/nicolamarella/debezium-timestamp-converter</url>
     </repository>
   </distributionManagement>
 
