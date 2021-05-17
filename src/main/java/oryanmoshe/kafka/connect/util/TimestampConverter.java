@@ -71,8 +71,14 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
         if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.equalsIgnoreCase(column.typeName()))) {
             boolean isTime = "time".equalsIgnoreCase(column.typeName());
             registration.register(datetimeSchema, rawValue -> {
-                if (rawValue == null)
-                    return rawValue;
+                if (rawValue == null) {
+                    if column.hasDefaultValue() {
+                        return column.defaultValue();
+                    }
+                    else {
+                        return rawValue;
+                    }
+                }
 
                 Long millis = getMillis(rawValue.toString(), isTime);
                 if (millis == null)
