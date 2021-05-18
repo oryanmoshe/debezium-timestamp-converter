@@ -72,7 +72,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
             boolean isTime = "time".equalsIgnoreCase(column.typeName());
             registration.register(datetimeSchema, rawValue -> {
                 if (rawValue == null) {
-                    if column.hasDefaultValue() {
+                    if (column.hasDefaultValue()) {
                         return column.defaultValue();
                     }
                     else {
