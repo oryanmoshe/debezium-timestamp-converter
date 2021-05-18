@@ -36,7 +36,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public String strDatetimeFormat, strDateFormat, strTimeFormat;
     public Boolean debug;
 
-    private SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
+    private final SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
 
     private SimpleDateFormat simpleDatetimeFormatter, simpleDateFormatter, simpleTimeFormatter;
 
