@@ -43,9 +43,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Download Maven build artifact
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           name: build-artifact
+          path: ~/build/
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/*/ | tr / - }" >> $GITHUB_ENV
@@ -65,6 +66,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build-artifact/TimestampConverter-${{ env.VERSION }}-SNAPSHOT.jar
+          asset_path: ~/build/build-artifact/TimestampConverter-${{ env.VERSION }}-SNAPSHOT.jar
           asset_name: TimestampConverter-${{ env.VERSION }}-SNAPSHOT.jar
           asset_content_type: application/java-archive
