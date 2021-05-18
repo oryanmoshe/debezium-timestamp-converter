@@ -78,7 +78,7 @@ public class TimestampConverterTests {
             "datetime,, 19/04/2019 15:13:20.345123, 2019-04-19T15:13:20.345Z",
             "datetime,, 2019-4-19 15:13:20.345123, 2019-04-19T15:13:20.345Z",
             "datetime2,, 2019-4-19 15:13:20.345123, 2019-04-19T15:13:20.345Z",
-            "datetime,, 2019-4-19 3:1:0.345123, 2019-04-19T03:01:00.345Z" })
+            "datetime,, 2019-4-19 3:1:0.345123, 2019-04-19T03:01:00.345Z", "datetime,,,", "timestamp,,,", "date,,,"})
     void converterTest(final String columnType, final String format, final String input, final String expectedResult) {
         final TimestampConverter tsConverter = new TimestampConverter();
 
@@ -97,12 +97,18 @@ public class TimestampConverterTests {
 
         System.out.println(mockRegistration._schema.name());
 
-        String actualResult = mockRegistration._converter.convert(input).toString();
+        Object actualResult = mockRegistration._converter.convert(input);
         System.out.println(actualResult);
+        if (actualResult == null) {
+            assertEquals(actualResult, null, String.format(
+                    "columnType: %s, format: %s, input: %s, actualTimeFormat: %s, actualDateFormat: %s, props: %s",
+                    columnType, format, input, tsConverter.strTimeFormat, tsConverter.strDateFormat, props));
+        } else {
         assertEquals(expectedResult, actualResult,
                 String.format(
                         "columnType: %s, format: %s, input: %s, actualTimeFormat: %s, actualDateFormat: %s, props: %s",
                         columnType, format, input, tsConverter.strTimeFormat, tsConverter.strDateFormat, props));
+        }
     }
 
     RelationalColumn getMockColumn(String type) {
@@ -292,7 +298,7 @@ public class TimestampConverterTests {
 
             @Override
             public boolean hasDefaultValue() {
-                return false;
+                return true;
             }
 
             @Override

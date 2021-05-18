@@ -36,7 +36,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public String strDatetimeFormat, strDateFormat, strTimeFormat;
     public Boolean debug;
 
-    private SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
+    private final SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
 
     private SimpleDateFormat simpleDatetimeFormatter, simpleDateFormatter, simpleTimeFormatter;
 
@@ -71,8 +71,12 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
         if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.equalsIgnoreCase(column.typeName()))) {
             boolean isTime = "time".equalsIgnoreCase(column.typeName());
             registration.register(datetimeSchema, rawValue -> {
-                if (rawValue == null)
+                if (rawValue == null) {
+                    if (column.hasDefaultValue()) {
+                        return column.defaultValue();
+                    }
                     return rawValue;
+                }
 
                 Long millis = getMillis(rawValue.toString(), isTime);
                 if (millis == null)
