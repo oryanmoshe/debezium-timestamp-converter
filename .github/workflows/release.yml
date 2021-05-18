@@ -42,17 +42,14 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v2
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/ | tr / -}" >> $GITHUB_ENV
       - name: Download Maven build artifact
         uses: actions/download-artifact@v2
         with:
           name: build-artifact
           path: ~/build
-      - name: Display structure of downloaded files
-        run: ls -R
-        working-directory: ~/build
-      - name: Get the version
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF/refs\/tags\/v/ | tr / -}" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
