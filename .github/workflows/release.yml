@@ -48,7 +48,7 @@ jobs:
           name: build-artifact
       - name: Get the version
         id: get_version
-        run: echo "VERSION=${echo ${GITHUB_REF/refs\/tags\/v/}| tr / -}" >> $GITHUB_ENV
+        run: echo "VERSION=${GITHUB_REF#refs/*/ | tr / - }" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
