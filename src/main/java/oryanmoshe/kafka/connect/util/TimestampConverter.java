@@ -75,9 +75,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
                     if (column.hasDefaultValue()) {
                         return column.defaultValue();
                     }
-                    else {
-                        return rawValue;
-                    }
+                    return rawValue;
                 }
 
                 Long millis = getMillis(rawValue.toString(), isTime);
