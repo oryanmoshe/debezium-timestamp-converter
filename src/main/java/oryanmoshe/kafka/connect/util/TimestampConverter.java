@@ -66,7 +66,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public void converterFor(RelationalColumn column, ConverterRegistration<SchemaBuilder> registration) {
         if (this.debug)
             System.out.printf(
-                    "[TimestampConverter.converterFor] Starting to register column. column.name: %s, column.typeName: %s, column.hasDefaultValue: %s, column.defaultValue: %s column.isOptional: %s%n",
+                    "[TimestampConverter.converterFor] Starting to register column. column.name: %s, column.typeName: %s, column.hasDefaultValue: %s, column.defaultValue: %s, column.isOptional: %s%n",
                     column.name(), column.typeName(), column.hasDefaultValue(), column.defaultValue(), column.isOptional());
         if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.equalsIgnoreCase(column.typeName()))) {
             boolean isTime = "time".equalsIgnoreCase(column.typeName());
