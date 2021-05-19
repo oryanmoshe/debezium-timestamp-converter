@@ -36,7 +36,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public String strDatetimeFormat, strDateFormat, strTimeFormat;
     public Boolean debug;
 
-    private final SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
+//    private final SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
 
     private SimpleDateFormat simpleDatetimeFormatter, simpleDateFormatter, simpleTimeFormatter;
 
@@ -70,8 +70,15 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
                     column.name(), column.typeName(), column.hasDefaultValue(), column.defaultValue(), column.isOptional());
         if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.equalsIgnoreCase(column.typeName()))) {
             boolean isTime = "time".equalsIgnoreCase(column.typeName());
-            registration.register(datetimeSchema, rawValue -> {
+            // Use a new SchemaBuilder every time in order to avoid changing "Already set" options
+            // in the schema builder between tables.
+            registration.register(SchemaBuilder.string().optional(), rawValue -> {
                 if (rawValue == null) {
+                    // DEBUG
+                    if (this.debug) {
+                        System.out.printf("[TimestampConverter.converterFor] rawValue of %s is null.%n", column.name());
+                    }
+
                     if (column.isOptional()) {
                         return null;
                     }

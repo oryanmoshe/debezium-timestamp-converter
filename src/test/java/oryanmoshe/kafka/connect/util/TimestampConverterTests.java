@@ -139,7 +139,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return null;
+                return "datecolumn";
             }
 
             @Override
@@ -199,7 +199,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return null;
+                return "timecolumn";
             }
 
             @Override
@@ -259,7 +259,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return null;
+                return "datetimecolumn";
             }
 
             @Override
@@ -319,7 +319,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return null;
+                return "datetime2column";
             }
 
             @Override
@@ -379,7 +379,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return null;
+                return "timestampcolumn";
             }
 
             @Override
