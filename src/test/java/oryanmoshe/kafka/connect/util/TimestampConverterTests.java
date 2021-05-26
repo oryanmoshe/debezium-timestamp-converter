@@ -68,8 +68,8 @@ public class TimestampConverterTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"01:15:45Z, 02:15:45 +01, CET, HH:mm:ss X",
-                "23:59:01Z, 00:59:01 +0100, CET, HH:mm:ss Z"})
+    @CsvSource({"01:15:45Z, 03:15:45 +02, Africa/Harare, HH:mm:ss X",
+                "23:59:01Z, 01:59:01 +0200, Africa/Harare, HH:mm:ss Z"})
     void converterTestPGTimeTzWithConversion(String input, String expected, String tzstring, String outputFormat) {
 
         final TimestampConverter tsConverter = new TimestampConverter();
