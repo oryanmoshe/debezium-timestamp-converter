@@ -20,7 +20,7 @@ To configure this converter all you need to do is add the following lines to you
 There are a few configuration settings you can add, here are their default values:
 ```json
 "timestampConverter.format.time": "HH:mm:ss.SSS",
-"timestampConverter.format.date": "YYYY-MM-dd",
-"timestampConverter.format.datetime": "YYYY-MM-dd'T'HH:mm:ss.SSS'Z'",
+"timestampConverter.format.date": "yyyy-MM-dd",
+"timestampConverter.format.datetime": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
 "timestampConverter.debug": "false"
 ```
