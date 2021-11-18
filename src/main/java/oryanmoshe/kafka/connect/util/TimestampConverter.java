@@ -5,7 +5,11 @@ import io.debezium.spi.converter.RelationalColumn;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -33,33 +37,32 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     private static final String DATETIME_REGEX = "(?<datetime>(?<date>(?:(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))|(?:(?<day2>\\d{1,2})\\/(?<month2>\\d{1,2})\\/(?<year2>\\d{4}))|(?:(?<day3>\\d{1,2})-(?<month3>\\w{3})-(?<year3>\\d{4})))?(?:\\s?T?(?<time>(?<hour>\\d{1,2}):(?<minute>\\d{1,2}):(?<second>\\d{1,2})\\.?(?<milli>\\d{0,7})?)?))";
     private static final Pattern regexPattern = Pattern.compile(DATETIME_REGEX);
 
-    public String strDatetimeFormat, strDateFormat, strTimeFormat;
     public Boolean debug;
 
-//    private final SchemaBuilder datetimeSchema = SchemaBuilder.string().optional().name("oryanmoshe.time.DateTimeString");
-
-    private SimpleDateFormat simpleDatetimeFormatter, simpleDateFormatter, simpleTimeFormatter;
+    private DateTimeFormatter dateTimeFormatter;
+    private DateTimeFormatter dateFormatter;
+    private SimpleDateFormat timeFormatter;
 
     @Override
     public void configure(Properties props) {
-        this.strDatetimeFormat = props.getProperty("format.datetime", DEFAULT_DATETIME_FORMAT);
-        this.simpleDatetimeFormatter = new SimpleDateFormat(this.strDatetimeFormat);
+        final String dateTimeFormatter = props.getProperty("format.datetime", DEFAULT_DATETIME_FORMAT);
+        this.dateTimeFormatter = DateTimeFormatter.ofPattern(dateTimeFormatter).withZone(ZoneOffset.UTC);
 
-        this.strDateFormat = props.getProperty("format.date", DEFAULT_DATE_FORMAT);
-        this.simpleDateFormatter = new SimpleDateFormat(this.strDateFormat);
+        final String dateFormatter = props.getProperty("format.date", DEFAULT_DATE_FORMAT);
+        this.dateFormatter = DateTimeFormatter.ofPattern(dateFormatter).withZone(ZoneOffset.UTC);
 
-        this.strTimeFormat = props.getProperty("format.time", DEFAULT_TIME_FORMAT);
-        this.simpleTimeFormatter = new SimpleDateFormat(this.strTimeFormat);
+        final String timeFormatter = props.getProperty("format.time", DEFAULT_TIME_FORMAT);
+        this.timeFormatter = new SimpleDateFormat(timeFormatter);
 
         this.debug = props.getProperty("debug", "false").equals("true");
 
-        this.simpleDatetimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        this.simpleTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        this.timeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        if (this.debug)
+        if (this.debug) {
             System.out.printf(
-                    "[TimestampConverter.configure] Finished configuring formats. this.strDatetimeFormat: %s, this.strTimeFormat: %s%n",
-                    this.strDatetimeFormat, this.strTimeFormat);
+                    "[TimestampConverter.configure] dateTimeFormatter: %s, dateFormatter: %s, timeFormatter: %s%n",
+                    dateTimeFormatter, dateFormatter, timeFormatter);
+        }
     }
 
     @Override
@@ -69,69 +72,61 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
                     "[TimestampConverter.converterFor] Starting to register column. column.name: %s, column.typeName: %s, column.hasDefaultValue: %s, column.defaultValue: %s, column.isOptional: %s%n",
                     column.name(), column.typeName(), column.hasDefaultValue(), column.defaultValue(), column.isOptional());
         if (SUPPORTED_DATA_TYPES.stream().anyMatch(s -> s.equalsIgnoreCase(column.typeName()))) {
-            boolean isTime = "time".equalsIgnoreCase(column.typeName());
             // Use a new SchemaBuilder every time in order to avoid changing "Already set" options
             // in the schema builder between tables.
-            registration.register(SchemaBuilder.string().optional(), rawValue -> {
-                if (rawValue == null) {
-                    // DEBUG
-                    if (this.debug) {
-                        System.out.printf("[TimestampConverter.converterFor] rawValue of %s is null.%n", column.name());
-                    }
 
-                    if (column.isOptional()) {
-                        return null;
-                    }
-                    else if (column.hasDefaultValue()) {
-                        return column.defaultValue();
-                    }
-                    return rawValue;
+            // Building the schema for the payload
+            final SchemaBuilder builder = column.isOptional() ? SchemaBuilder.string().optional() : SchemaBuilder.string().required();
+            registration.register(builder, rawValue -> {
+                if (rawValue == null) {
+                    if (this.debug) { System.out.printf("[TimestampConverter.converterFor] rawValue of %s is null.%n", column.name()); }
+
+                    if (column.isOptional()) { return null; }
+                    else if (column.hasDefaultValue()) { return column.defaultValue(); }
+                    return null;
                 }
 
-                Long millis = getMillis(rawValue.toString(), isTime);
-                if (millis == null)
-                    return rawValue.toString();
+                final Long epoch = parseToEpoch(rawValue.toString());
 
-                Instant instant = Instant.ofEpochMilli(millis);
-                Date dateObject = Date.from(instant);
-                if (this.debug)
+                if (this.debug) { System.out.printf("[TimestampConverter.converterFor] Parsed epoch: %d%n", epoch); }
+                if (epoch == null) { return rawValue.toString(); }
+
+                final Instant instant = Instant.EPOCH.plus(epoch, ChronoUnit.MICROS);
+
+                if (this.debug) {
                     System.out.printf(
-                            "[TimestampConverter.converterFor] Before returning conversion. column.name: %s, column.typeName: %s, millis: %d%n",
-                            column.name(), column.typeName(), millis);
+                            "[TimestampConverter.converterFor] Before returning conversion. column.name: %s, column.typeName: %s, epoch: %d%n",
+                            column.name(), column.typeName(), epoch);
+                }
                 switch (column.typeName().toLowerCase()) {
                     case "time":
-                        return this.simpleTimeFormatter.format(dateObject);
+                        if (this.debug) { System.out.println("Using timeFormatter"); }
+                        return this.timeFormatter.format(instant);
                     case "date":
-                        return this.simpleDateFormatter.format(dateObject);
+                        if (this.debug) { System.out.println("Using dateFormatter"); }
+                        return this.dateFormatter.format(instant);
                     default:
-                        return this.simpleDatetimeFormatter.format(dateObject);
+                        if (this.debug) { System.out.println("Using dateTimeFormatter"); }
+                        return this.dateTimeFormatter.format(instant);
                 }
             });
         }
     }
 
-    private Long getMillis(String timestamp, boolean isTime) {
-        if (timestamp.isBlank())
-            return null;
-
+    private Long parseToEpoch(final String timestamp) {
+        if (timestamp == null || timestamp.isBlank()) { return null; }
         if (timestamp.contains(":") || timestamp.contains("-")) {
-            return milliFromDateString(timestamp);
+            return epochFromDateString(timestamp);
         }
-
-        int excessLength = timestamp.length() - MILLIS_LENGTH;
-        long longTimestamp = Long.parseLong(timestamp);
-
-        if (isTime)
-            return longTimestamp;
-
-        if (excessLength < 0)
-            return longTimestamp * 24 * 60 * 60 * 1000;
-
-        long millis = longTimestamp / (long) Math.pow(10, excessLength);
-        return millis;
+        return Long.parseLong(timestamp);
     }
 
-    private Long milliFromDateString(String timestamp) {
+    private Long epochFromDateString(final String timestamp) {
+        System.out.println("TIMESTAMP: " + timestamp);
+
+//        final Instant instant = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")).atZone(ZoneOffset.UTC).toInstant();
+//        return Long.parseLong(String.valueOf(instant.getEpochSecond()) + instant.getLong(ChronoField.MICRO_OF_SECOND));
+
         Matcher matches = regexPattern.matcher(timestamp);
 
         if (matches.find()) {
@@ -146,13 +141,10 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
             String second = matches.group("second") != null ? matches.group("second") : "00";
             String milli = matches.group("milli") != null ? matches.group("milli") : "000";
 
-            if (milli.length() > 3)
-                milli = milli.substring(0, 3);
-
             String dateStr = "";
             dateStr += String.format("%s:%s:%s.%s", ("00".substring(hour.length()) + hour),
                     ("00".substring(minute.length()) + minute), ("00".substring(second.length()) + second),
-                    (milli + "000".substring(milli.length())));
+                    (milli + "000000".substring(milli.length())));
 
             if (year != null) {
                 if (month.length() > 2)
@@ -164,10 +156,10 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
                 dateStr = String.format("%s-%s-%sT%sZ", "2020", "01", "01", dateStr);
             }
 
-            Date dateObj = Date.from(Instant.parse(dateStr));
-            return dateObj.getTime();
-        }
+            final Instant instant = Instant.parse(dateStr);
 
+            return Long.parseLong(String.valueOf(instant.getEpochSecond()) + instant.getLong(ChronoField.MICRO_OF_SECOND));
+        }
         return null;
     }
 }
