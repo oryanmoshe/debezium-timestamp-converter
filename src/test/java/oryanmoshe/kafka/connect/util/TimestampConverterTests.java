@@ -50,7 +50,7 @@ public class TimestampConverterTests {
         assertEquals(expectedResult, actualResult);
 
 
-        // Convert from string back
+        // Convert reverse
         final String columnType2 = "datetime";
         final RelationalColumn mockColumn2 = getMockColumn(columnType2);
         tsConverter.converterFor(mockColumn2, mockRegistration);
@@ -60,6 +60,132 @@ public class TimestampConverterTests {
         assertEquals(actualResult2, expectedResult);
     }
 
+    @Test
+    void converterDate() {
+        final String columnType = "date";
+        final String format = "YYYY-MM-dd";
+        final String input = "18368";
+        final String expectedResult = "2020-04-16";
+
+        final Properties props = new Properties();
+        props.putAll(Map.of(String.format("format.%s", "datetime"),format, "debug", "true"));
+
+        final TimestampConverter tsConverter = new TimestampConverter();
+        tsConverter.configure(props);
+
+        final RelationalColumn mockColumn = getMockColumn(columnType);
+        final MockRegistration<SchemaBuilder> mockRegistration = new MockRegistration<>();
+
+        tsConverter.converterFor(mockColumn, mockRegistration);
+
+        final Object actualResult = mockRegistration._converter.convert(input);
+
+        assertEquals(expectedResult, actualResult);
+
+
+        // Convert reverse
+        final String columnType2 = "datetime";
+        final RelationalColumn mockColumn2 = getMockColumn(columnType2);
+        tsConverter.converterFor(mockColumn2, mockRegistration);
+
+        final Object actualResult2 = mockRegistration._converter.convert(expectedResult);
+
+        assertEquals(actualResult2, expectedResult);
+    }
+
+    @Test
+    void converterDate2() {
+        final String columnType = "datetime";
+        final String format = "YYYY-MM-dd";
+        final String input = "1587042000279";
+        final String expectedResult = "2020-04-16";
+
+        final Properties props = new Properties();
+        props.putAll(Map.of(String.format("format.%s", "datetime"),format, "debug", "true"));
+
+        final TimestampConverter tsConverter = new TimestampConverter();
+        tsConverter.configure(props);
+
+        final RelationalColumn mockColumn = getMockColumn(columnType);
+        final MockRegistration<SchemaBuilder> mockRegistration = new MockRegistration<>();
+
+        tsConverter.converterFor(mockColumn, mockRegistration);
+
+        final Object actualResult = mockRegistration._converter.convert(input);
+
+        assertEquals(expectedResult, actualResult);
+
+
+        // Convert reverse
+        final String columnType2 = "datetime";
+        final RelationalColumn mockColumn2 = getMockColumn(columnType2);
+        tsConverter.converterFor(mockColumn2, mockRegistration);
+
+        final Object actualResult2 = mockRegistration._converter.convert(expectedResult);
+
+        assertEquals(actualResult2, expectedResult);
+    }
+
+    @Test
+    void converterTime() {
+        final String columnType = "time";
+        final String format = "HH:mm:ss.SSS";
+        final String input = "2230";
+        final String expectedResult = "00:00:02.230";
+
+        final Properties props = new Properties();
+        props.putAll(Map.of(String.format("format.%s", columnType), format, "debug", "true"));
+
+        final TimestampConverter tsConverter = new TimestampConverter();
+        tsConverter.configure(props);
+
+        final RelationalColumn mockColumn = getMockColumn(columnType);
+        final MockRegistration<SchemaBuilder> mockRegistration = new MockRegistration<>();
+
+        tsConverter.converterFor(mockColumn, mockRegistration);
+
+        final Object actualResult = mockRegistration._converter.convert(input);
+
+        assertEquals(expectedResult, actualResult);
+
+        // Convert reverse
+        final RelationalColumn mockColumn2 = getMockColumn(columnType);
+        tsConverter.converterFor(mockColumn2, mockRegistration);
+
+        final Object actualResult2 = mockRegistration._converter.convert(expectedResult);
+
+        assertEquals(actualResult2, expectedResult);
+    }
+
+    @Test
+    void converterTime2() {
+        final String columnType = "time";
+        final String input = "15:13:20";
+        final String expectedResult = "15:13:20.000";
+
+        final Properties props = new Properties();
+        props.putAll(Map.of("debug", "true"));
+
+        final TimestampConverter tsConverter = new TimestampConverter();
+        tsConverter.configure(props);
+
+        final RelationalColumn mockColumn = getMockColumn(columnType);
+        final MockRegistration<SchemaBuilder> mockRegistration = new MockRegistration<>();
+
+        tsConverter.converterFor(mockColumn, mockRegistration);
+
+        final Object actualResult = mockRegistration._converter.convert(input);
+
+        assertEquals(expectedResult, actualResult);
+
+        // Convert reverse
+        final RelationalColumn mockColumn2 = getMockColumn(columnType);
+        tsConverter.converterFor(mockColumn2, mockRegistration);
+
+        final Object actualResult2 = mockRegistration._converter.convert(expectedResult);
+
+        assertEquals(actualResult2, expectedResult);
+    }
 
     @ParameterizedTest
     @CsvSource({ "date, YYYY-MM-dd, 18368, 2020-04-16",
