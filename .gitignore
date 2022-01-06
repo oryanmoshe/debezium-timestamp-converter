@@ -15,3 +15,5 @@ TimestampConverter.iml
 .project
 .settings
 .vscode
+.idea
+*.iml

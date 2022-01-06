@@ -83,7 +83,8 @@ public class TimestampConverterTests {
             "datetime,, 19/04/2019 15:13:20.345123, 2019-04-19T15:13:20.345Z",
             "datetime,, 2019-4-19 15:13:20.345123, 2019-04-19T15:13:20.345Z",
             "datetime2,, 2019-4-19 15:13:20.345123, 2019-04-19T15:13:20.345Z",
-            "datetime,, 2019-4-19 3:1:0.345123, 2019-04-19T03:01:00.345Z" })
+            "datetime,, 2019-4-19 3:1:0.345123, 2019-04-19T03:01:00.345Z",
+            "datetime,YYYY-MM-dd,,", "timestamp,,,", "date,,,"})
     void converterTest(final String columnType, final String format, final String input, final String expectedResult) {
         final TimestampConverter tsConverter = new TimestampConverter();
 
@@ -136,7 +137,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "dateMockColumnName";
+                return "dateColumnName";
             }
 
             @Override
@@ -196,7 +197,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "timeMockColumnName";
+                return "timeColumnName";
             }
 
             @Override
@@ -256,7 +257,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "datetimeMockColumnName";
+                return "datetimeColumnName";
             }
 
             @Override
@@ -296,7 +297,7 @@ public class TimestampConverterTests {
 
             @Override
             public boolean hasDefaultValue() {
-                return false;
+                return true;
             }
 
             @Override
@@ -316,7 +317,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "datetime2MockColumnName";
+                return "datetime2ColumnName";
             }
 
             @Override
@@ -376,7 +377,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "timestampMockColumnName";
+                return "timestampColumnName";
             }
 
             @Override
