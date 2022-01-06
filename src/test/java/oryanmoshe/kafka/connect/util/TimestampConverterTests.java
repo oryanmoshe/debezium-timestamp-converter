@@ -1,18 +1,23 @@
 package oryanmoshe.kafka.connect.util;
 
+import io.debezium.spi.converter.CustomConverter.Converter;
+import io.debezium.spi.converter.CustomConverter.ConverterRegistration;
+import io.debezium.spi.converter.RelationalColumn;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import io.debezium.spi.converter.RelationalColumn;
-import io.debezium.spi.converter.CustomConverter.Converter;
-import io.debezium.spi.converter.CustomConverter.ConverterRegistration;
-
 import java.util.OptionalInt;
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TimestampConverterTests {
+
+    private static final Logger log = LoggerFactory.getLogger(TimestampConverterTests.class);
+
     private class MockRegistration<S> implements ConverterRegistration<S> {
         public Converter _converter;
         public S _schema;
@@ -35,14 +40,14 @@ public class TimestampConverterTests {
 
         final String beforeConfig = tsConverter.strDateFormat;
         assertEquals(null, beforeConfig, beforeConfig + " before configuration, should equal " + null);
-        System.out.println(beforeConfig);
+        log.info(beforeConfig);
 
         tsConverter.configure(props);
 
         final String actualResult = tsConverter.strDateFormat;
         assertEquals(expectedFormat, actualResult,
                 actualResult + " after configuration, should equal " + expectedFormat);
-        System.out.println(actualResult);
+        log.info(actualResult);
     }
 
     @ParameterizedTest
@@ -56,14 +61,14 @@ public class TimestampConverterTests {
 
         final String beforeConfig = tsConverter.strTimeFormat;
         assertEquals(null, beforeConfig, beforeConfig + " before configuration, should equal " + null);
-        System.out.println(beforeConfig);
+        log.info(beforeConfig);
 
         tsConverter.configure(props);
 
         final String actualResult = tsConverter.strTimeFormat;
         assertEquals(expectedFormat, actualResult,
                 actualResult + " after configuration, should equal " + expectedFormat);
-        System.out.println(actualResult);
+        log.info(actualResult);
     }
 
     @ParameterizedTest
@@ -78,41 +83,34 @@ public class TimestampConverterTests {
             "datetime,, 19/04/2019 15:13:20.345123, 2019-04-19T15:13:20.345Z",
             "datetime,, 2019-4-19 15:13:20.345123, 2019-04-19T15:13:20.345Z",
             "datetime2,, 2019-4-19 15:13:20.345123, 2019-04-19T15:13:20.345Z",
-            "datetime,, 2019-4-19 3:1:0.345123, 2019-04-19T03:01:00.345Z", "datetime,YYYY-MM-dd,,", "timestamp,,,", "date,,,"})
+            "datetime,, 2019-4-19 3:1:0.345123, 2019-04-19T03:01:00.345Z",
+            "datetime,YYYY-MM-dd,,", "timestamp,,,", "date,,,"})
     void converterTest(final String columnType, final String format, final String input, final String expectedResult) {
         final TimestampConverter tsConverter = new TimestampConverter();
 
-        Properties props = new Properties();
-        if (format != null)
-            props.put(
-                    String.format("format.%s",
-                            columnType.equals("timestamp") || columnType.equals("datetime2") ? "datetime" : columnType),
-                    format);
+        final Properties props = new Properties();
+        if (format != null) {
+            props.put(String.format("format.%s", columnType.equals("timestamp") || columnType.equals("datetime2") ? "datetime" : columnType), format);
+        }
         props.put("debug", "true");
         tsConverter.configure(props);
 
-        RelationalColumn mockColumn = getMockColumn(columnType);
-        MockRegistration<SchemaBuilder> mockRegistration = new MockRegistration<SchemaBuilder>();
+        final RelationalColumn mockColumn = getMockColumn(columnType);
+        final MockRegistration<SchemaBuilder> mockRegistration = new MockRegistration<SchemaBuilder>();
 
         tsConverter.converterFor(mockColumn, mockRegistration);
 
-        System.out.println(mockRegistration._schema.name());
+        log.info("mockRegistration._schema.name(): {}", mockRegistration._schema.name());
 
-        Object actualResult = mockRegistration._converter.convert(input);
-        System.out.println(actualResult);
-        if (actualResult == null) {
-            assertEquals(actualResult, null, String.format(
-                    "columnType: %s, format: %s, input: %s, actualTimeFormat: %s, actualDateFormat: %s, props: %s",
-                    columnType, format, input, tsConverter.strTimeFormat, tsConverter.strDateFormat, props));
-        } else {
+        final String actualResult = mockRegistration._converter.convert(input).toString();
+        log.info("actualResult: {}", actualResult);
         assertEquals(expectedResult, actualResult,
                 String.format(
                         "columnType: %s, format: %s, input: %s, actualTimeFormat: %s, actualDateFormat: %s, props: %s",
                         columnType, format, input, tsConverter.strTimeFormat, tsConverter.strDateFormat, props));
-        }
     }
 
-    RelationalColumn getMockColumn(String type) {
+    private RelationalColumn getMockColumn(final String type) {
         switch (type) {
             case "date":
                 return getDateColumn();
@@ -129,7 +127,7 @@ public class TimestampConverterTests {
         }
     }
 
-    RelationalColumn getDateColumn() {
+    private RelationalColumn getDateColumn() {
         return new RelationalColumn() {
 
             @Override
@@ -139,7 +137,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "datecolumn";
+                return "dateColumnName";
             }
 
             @Override
@@ -189,7 +187,7 @@ public class TimestampConverterTests {
         };
     }
 
-    RelationalColumn getTimeColumn() {
+    private RelationalColumn getTimeColumn() {
         return new RelationalColumn() {
 
             @Override
@@ -199,7 +197,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "timecolumn";
+                return "timeColumnName";
             }
 
             @Override
@@ -249,7 +247,7 @@ public class TimestampConverterTests {
         };
     }
 
-    RelationalColumn getDateTimeColumn() {
+    private RelationalColumn getDateTimeColumn() {
         return new RelationalColumn() {
 
             @Override
@@ -259,7 +257,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "datetimecolumn";
+                return "datetimeColumnName";
             }
 
             @Override
@@ -309,7 +307,7 @@ public class TimestampConverterTests {
         };
     }
 
-    RelationalColumn getDateTime2Column() {
+    private RelationalColumn getDateTime2Column() {
         return new RelationalColumn() {
 
             @Override
@@ -319,7 +317,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "datetime2column";
+                return "datetime2ColumnName";
             }
 
             @Override
@@ -369,7 +367,7 @@ public class TimestampConverterTests {
         };
     }
 
-    RelationalColumn getTimestampColumn() {
+    private RelationalColumn getTimestampColumn() {
         return new RelationalColumn() {
 
             @Override
@@ -379,7 +377,7 @@ public class TimestampConverterTests {
 
             @Override
             public String name() {
-                return "timestampcolumn";
+                return "timestampColumnName";
             }
 
             @Override
