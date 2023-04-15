@@ -30,7 +30,7 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
     public static final List<String> SUPPORTED_DATA_TYPES = List.of("date", "time", "datetime", "timestamp",
             "datetime2");
 
-    private static final String DATETIME_REGEX = "(?<datetime>(?<date>(?:(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))|(?:(?<day2>\\d{1,2})\\/(?<month2>\\d{1,2})\\/(?<year2>\\d{4}))|(?:(?<day3>\\d{1,2})-(?<month3>\\w{3})-(?<year3>\\d{4})))?(?:\\s?T?(?<time>(?<hour>\\d{1,2}):(?<minute>\\d{1,2}):(?<second>\\d{1,2})\\.?(?<milli>\\d{0,7})?)?))";
+    private static final String DATETIME_REGEX = "(?<datetime>(?<date>(?:(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))|(?:(?<day2>\\d{1,2})\\/(?<month2>\\d{1,2})\\/(?<year2>\\d{4}))|(?:(?<day3>\\d{1,2})-(?<month3>\\w{3})-(?<year3>\\d{4})))?(?:\\s?T?(?<time>(?:(?<hour>\\d{1,2}):(?<minute>\\d{1,2}):(?<second>\\d{1,2}))\\.?(?<milli>\\d{0,7})|(?:(?<hour2>\\d{1,2}):(?<minute2>\\d{1,2}))?)?))";
     private static final Pattern regexPattern = Pattern.compile(DATETIME_REGEX);
 
     public String strDatetimeFormat, strDateFormat, strTimeFormat;
@@ -141,8 +141,10 @@ public class TimestampConverter implements CustomConverter<SchemaBuilder, Relati
                     : (matches.group("month2") != null ? matches.group("month2") : matches.group("month3")));
             String day = (matches.group("day") != null ? matches.group("day")
                     : (matches.group("day2") != null ? matches.group("day2") : matches.group("day3")));
-            String hour = matches.group("hour") != null ? matches.group("hour") : "00";
-            String minute = matches.group("minute") != null ? matches.group("minute") : "00";
+            String hour = (matches.group("hour") != null ? matches.group("hour")
+                    : (matches.group("hour2") != null ? matches.group("hour2") : "00"));
+            String minute = (matches.group("minute") != null ? matches.group("minute")
+                    : (matches.group("minute2") != null ? matches.group("minute2") : "00"));
             String second = matches.group("second") != null ? matches.group("second") : "00";
             String milli = matches.group("milli") != null ? matches.group("milli") : "000";
 
