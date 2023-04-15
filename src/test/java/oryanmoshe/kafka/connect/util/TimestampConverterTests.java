@@ -78,7 +78,9 @@ public class TimestampConverterTests {
             "datetime,, 19/04/2019 15:13:20.345123, 2019-04-19T15:13:20.345Z",
             "datetime,, 2019-4-19 15:13:20.345123, 2019-04-19T15:13:20.345Z",
             "datetime2,, 2019-4-19 15:13:20.345123, 2019-04-19T15:13:20.345Z",
-            "datetime,, 2019-4-19 3:1:0.345123, 2019-04-19T03:01:00.345Z", "datetime,YYYY-MM-dd,,", "timestamp,,,", "date,,,"})
+            "datetime,, 2019-4-19 3:1:0.345123, 2019-04-19T03:01:00.345Z",
+            "datetime,, 2019-4-19 15:13, 2019-04-19T15:13:00.000Z",
+            "datetime,YYYY-MM-dd,,", "timestamp,,,", "date,,,"})
     void converterTest(final String columnType, final String format, final String input, final String expectedResult) {
         final TimestampConverter tsConverter = new TimestampConverter();
 
